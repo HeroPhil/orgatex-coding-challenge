@@ -1,0 +1,14 @@
+name: orgatex-smart-factory
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883" # MQTT
+      - "9001:9001" # WS
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-h", "localhost", "-t", "$SYS/#", "-C", "1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
