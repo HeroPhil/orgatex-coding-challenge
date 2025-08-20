@@ -23,3 +23,10 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  processor:
+    build:
+      context: ./processor
+    ports:
+      - "8081:8081"
+
