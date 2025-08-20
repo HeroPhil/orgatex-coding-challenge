@@ -1,7 +1,7 @@
 name: orgatex-smart-factory
 services:
   mosquitto:
-    image: eclipse-mosquitto:2
+    image: eclipse-mosquitto:latest
     ports:
       - "1883:1883" # MQTT
       - "9001:9001" # WS
@@ -9,6 +9,17 @@ services:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     healthcheck:
       test: ["CMD", "mosquitto_sub", "-h", "localhost", "-t", "$SYS/#", "-C", "1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  dynamodb:
+    image: amazon/dynamodb-local:2.5.2
+    command: ["-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb"] # In-memory for local testing
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "exec 3<>/dev/tcp/127.0.0.1/8000 && echo -e 'GET / HTTP/1.1\r\nHost: localhost\r\n\r\n' >&3 && cat <&3 | head -n1 | grep -q HTTP"]
       interval: 5s
       timeout: 3s
       retries: 10
