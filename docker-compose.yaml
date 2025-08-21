@@ -50,3 +50,12 @@ services:
         condition: service_healthy
       # mosquitto:
       #   condition: service_healthy
+
+  api:
+    build:
+      context: ./api
+    ports:
+      - "3000:3000"
+    depends_on:
+      dynamodb:
+        condition: service_healthy
