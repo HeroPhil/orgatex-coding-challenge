@@ -27,6 +27,19 @@ services:
       timeout: 3s
       retries: 10
 
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin
+    ports:
+      - "8001:8001"
+    environment:
+      DYNAMO_ENDPOINT: "http://dynamodb:8000"
+      AWS_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: dummy
+      AWS_SECRET_ACCESS_KEY: dummy
+    depends_on:
+      dynamodb:
+        condition: service_healthy
+
   processor:
     build:
       context: ./processor
