@@ -1,6 +1,8 @@
 import {
     CreateTableCommand,
+    CreateTableCommandInput,
     DescribeTableCommand,
+    DescribeTableCommandInput,
     DynamoDBClient
 } from "@aws-sdk/client-dynamodb";
 import {
@@ -23,42 +25,80 @@ export const doc = DynamoDBDocumentClient.from(ddb, {
 
 export async function ensureTables() {
     await Promise.all([
-        ensureTable("telemetry", [
-            { AttributeName: "pk", KeyType: "HASH" }, // Partition key used for tenant and device
-            { AttributeName: "sk", KeyType: "RANGE" } // Sort key used for timestamp and sequence number
-        ]),
-        ensureTable("metrics_min", [
-            { AttributeName: "pk", KeyType: "HASH" },
-            { AttributeName: "sk", KeyType: "RANGE" }
-        ]),
-        ensureTable("dlq", [{ AttributeName: "id", KeyType: "HASH" }])
+        ensureTable({
+            TableName: "telemetry", KeySchema: [
+                { AttributeName: "pk", KeyType: "HASH" }, // Partition key used for tenant and device
+                { AttributeName: "sk", KeyType: "RANGE" } // Sort key used for timestamp and sequence number
+            ],
+            AttributeDefinitions: [
+                { AttributeName: "pk", AttributeType: "S" }, // String type for partition key
+                { AttributeName: "sk", AttributeType: "S" },  // String type for sort key
+                { AttributeName: "ts", AttributeType: "N" }, // For local secondary index
+                { AttributeName: "seq", AttributeType: "N" } // For local secondary index
+            ],
+            LocalSecondaryIndexes: [
+                {
+                    IndexName: "by_seq",
+                    KeySchema: [
+                        { AttributeName: "pk", KeyType: "HASH" },
+                        { AttributeName: "seq", KeyType: "RANGE" }
+                    ],
+                    Projection: {
+                        ProjectionType: "ALL" // Include all attributes in the index
+                    }
+                },
+                {
+                    IndexName: "by_ts",
+                    KeySchema: [
+                        { AttributeName: "pk", KeyType: "HASH" },
+                        { AttributeName: "ts", KeyType: "RANGE" }
+                    ],
+                    Projection: {
+                        ProjectionType: "ALL" // Include all attributes in the index
+                    }
+                }
+            ]
+        }),
+        ensureTable({
+            TableName: "metrics_min", KeySchema: [
+                { AttributeName: "pk", KeyType: "HASH" },
+                { AttributeName: "sk", KeyType: "RANGE" }
+            ],
+            AttributeDefinitions: [
+                { AttributeName: "pk", AttributeType: "S" },
+                { AttributeName: "sk", AttributeType: "S" }
+            ]
+        }),
+        ensureTable({
+            TableName: "dlq",
+            KeySchema: [
+                { AttributeName: "id", KeyType: "HASH" }
+            ],
+            AttributeDefinitions: [
+                { AttributeName: "id", AttributeType: "S" }
+            ]
+        })
     ]);
 }
 
 // Ensure a DynamoDB table exists with the given schema
 // TODO Should be done via TF in future
 async function ensureTable(
-    TableName: string,
-    KeySchema: Array<{ AttributeName: string; KeyType: "HASH" | "RANGE" }>
+    schema: CreateTableCommandInput
 ) {
-    // 1. Check if table exists
+    //Check if table exists
     try {
-        await ddb.send(new DescribeTableCommand({ TableName }));
+        await ddb.send(new DescribeTableCommand({ TableName: schema.TableName }));
         // Table already exists, no need to create
         return;
     } catch {
         // Table does not exist, proceed to create
         // Ignore NotFoundException
     }
-    const AttributeDefinitions = KeySchema.map((k) => ({
-        AttributeName: k.AttributeName,
-        AttributeType: "S" as const // string
-    }));
+
     await ddb.send(
         new CreateTableCommand({
-            TableName,
-            KeySchema,
-            AttributeDefinitions,
+            ...schema,
             BillingMode: "PAY_PER_REQUEST"
         })
     );
@@ -71,7 +111,7 @@ export async function writeNewTelemetry(
     telemetry: Telemetry,
 ) {
     const { ts, seq, temp, hum, status } = telemetry; // Destructure telemetry data
-    
+
     const pk = getPk(tenantId, deviceId); // Partition key for both tables
     const sk = getSk(ts, seq); // Sort key for telemetry table
     const skMin = getSkMin(ts); // Sort key for metrics_min table
