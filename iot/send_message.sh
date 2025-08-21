@@ -15,3 +15,7 @@ mosquitto_pub -h localhost -p 1883 -q 1 \
   -t tenants/t1/devices/d1/telemetry \
   -m "{\"ts\":$ts_date,\"temp\":24.0,\"hum\":46.0,\"status\":\"ok\",\"seq\":2}"
 
+# scenario 3: send message with wrong topic
+mosquitto_pub -h localhost -p 1883 -q 1 \
+  -t tenants/t1/devices/d1/telemetry/wrong \
+  -m "{\"ts\":$(date +%s),\"temp\":25.0,\"hum\":47.0,\"status\":\"ok\",\"seq\":3}"

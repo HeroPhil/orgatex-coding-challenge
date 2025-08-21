@@ -1,7 +1,6 @@
 import mqtt from "mqtt";
 import { ensureTables, putDLQ, writeNewTelemetry } from "./db.js";
 import { parseTopic, TelemetryPayload } from "./schema.js";
-import { tr } from "zod/locales";
 
 const MQTT_URL = process.env.MQTT_URL || "mqtt://mosquitto:1883";
 const MQTT_TOPIC = "tenants/+/devices/+/telemetry";
@@ -27,7 +26,7 @@ client.on("message", async (topic, message) => {
 
     const header = parseTopic(topic)
     if (!header) {
-        console.error("unrecognized topic:", topic);
+        console.error("error parsing topic:", topic);
         return;
     }
     const { tenantId, deviceId } = header;
