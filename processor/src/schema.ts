@@ -25,11 +25,16 @@ export function getSk(ts: number, seq: number) {
 }
 
 export function getSkMin(ts: number) {
-  const d = new Date(ts);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  // convert unix timestamp (seconds since 01/01/1970) to yyyymmddHHMM format
+  const ts_ms = ts * 1000; // convert to milliseconds
+  const date = new Date(ts_ms);
+
+  const y = date.getUTCFullYear().toString().padStart(4, '0');
+  const m = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = date.getUTCDate().toString().padStart(2, '0');
+  const hh = date.getUTCHours().toString().padStart(2, '0');
+  const mm = date.getUTCMinutes().toString().padStart(2, '0');
+
+  const result = `${y}${m}${day}${hh}${mm}`;
   return `${y}${m}${day}${hh}${mm}`; // yyyymmddHHMM
 }
