@@ -1,24 +1,17 @@
-# # scenario 1: send message with current timestamp
-# mosquitto_pub -h localhost -p 1883 -q 1 \
-#   -t tenants/t1/devices/d1/telemetry \
-#   -m "{\"ts\":$(date +%s),\"temp\":23.4,\"hum\":45.1,\"status\":\"ok\",\"seq\":1}"
+#!/bin/bash
 
-# # wait 1 second between messages to ensure different timestamps
-# sleep 1
+# parse MQTT_URL from environment variable or use default
+U="${MQTT_URL#*://}"              # strip scheme if present
+HOSTPORT="${U%%/*}"          # drop any path/query
+[ -z "$HOSTPORT" ] && HOSTPORT="$U"
 
-# # scenario 2: two messages with the same timestamp
-# ts_date=$(date +%s)
-# mosquitto_pub -h localhost -p 1883 -q 1 \
-#   -t tenants/t1/devices/d1/telemetry \
-#   -m "{\"ts\":$ts_date,\"temp\":24.0,\"hum\":46.0,\"status\":\"ok\",\"seq\":2}"
-# mosquitto_pub -h localhost -p 1883 -q 1 \
-#   -t tenants/t1/devices/d1/telemetry \
-#   -m "{\"ts\":$ts_date,\"temp\":24.0,\"hum\":46.0,\"status\":\"ok\",\"seq\":2}"
+HOST="${HOSTPORT%%:*}"
+PORT="${HOSTPORT##*:}"
+if [ "$HOST" = "$HOSTPORT" ]; then PORT="1883"; fi
+[ -z "$HOST" ] && HOST="localhost"
 
-# # scenario 3: send message with wrong topic
-# mosquitto_pub -h localhost -p 1883 -q 1 \
-#   -t tenants/t1/devices/d1/telemetry/wrong \
-#   -m "{\"ts\":$(date +%s),\"temp\":25.0,\"hum\":47.0,\"status\":\"ok\",\"seq\":3}"
+echo "MQTT broker URL: $MQTT_URL"
+echo "Using MQTT broker at $HOST:$PORT"
 
 seq=0
 temp=25.0
@@ -26,17 +19,18 @@ hum=47.0
 while true; do
   ts_date=$(date +%s)
   seq=$((seq + 1))
+
   # randomly change temperature and humidity
   temp=$(echo "$temp + $RANDOM % 5 - 2" | bc)
   hum=$(echo "$hum + $RANDOM % 5 - 2" | bc)
 
-  mosquitto_pub -h localhost -p 1883 -q 1 \
+  mosquitto_pub -h $HOST -p $PORT -q 1 \
     -t tenants/t1/devices/d1/telemetry \
     -m "{\"ts\":$ts_date,\"temp\":$temp,\"hum\":$hum,\"status\":\"ok\",\"seq\":$seq}"
 
   # 20% chance to send a message with the same timestamp
   if [ $((RANDOM % 5)) -eq 0 ]; then
-    mosquitto_pub -h localhost -p 1883 -q 1 \
+    mosquitto_pub -h $HOST -p $PORT -q 1 \
       -t tenants/t1/devices/d1/telemetry \
       -m "{\"ts\":$ts_date,\"temp\":$temp,\"hum\":$hum,\"status\":\"ok\",\"seq\":$seq}"
   fi

@@ -1,0 +1,10 @@
+# Simple publisher image
+FROM alpine:3.20
+
+# mosquitto_pub client + bash (for $RANDOM) + bc (for decimal math)
+RUN apk add --no-cache bash mosquitto-clients bc
+
+COPY send_message.sh /app/send_message.sh
+RUN chmod +x /app/send_message.sh
+
+ENTRYPOINT ["/bin/bash", "/app/send_message.sh"]

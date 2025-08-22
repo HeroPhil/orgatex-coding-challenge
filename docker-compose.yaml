@@ -1,5 +1,14 @@
 name: orgatex-smart-factory
 services:
+  iot-device:
+    build:
+      context: ./iot
+    environment:
+      - MQTT_URL=${MQTT_URL}
+    # depends_on:
+      # mosquitto:
+      #   condition: service_healthy
+
   mosquitto:
     image: eclipse-mosquitto:latest
     ports:
