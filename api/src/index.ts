@@ -1,5 +1,5 @@
 import Fastify from 'fastify'
-import { listDevicesForTenant } from './db';
+import { getLatestForDevice, listDevicesForTenant } from './db';
 
 const fastify = Fastify({
     logger: true
@@ -17,6 +17,16 @@ fastify.get('/api/devices', async (request, reply) => {
     }
 
     return { devices: await listDevicesForTenant(tenantId) };
+});
+
+fastify.get<{ Params: { id: string } }>("/api/devices/:id/latest", async (req, reply) => {
+    const tenantId = "t1"; // TODO get tenantId from request
+
+    const deviceId = req.params.id;
+    const item = await getLatestForDevice(tenantId, deviceId);
+    if (!item) return reply.code(404).send({ error: "not found" });
+
+    return { deviceId, ...item };
 });
 
 fastify.listen({ host: "0.0.0.0", port: 3000 }, (err, address) => {

@@ -1,10 +1,12 @@
 import {
     DynamoDBClient,
+    QueryCommand,
     ScanCommand
 } from "@aws-sdk/client-dynamodb";
 import {
     DynamoDBDocumentClient,
 } from "@aws-sdk/lib-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 // import { getPk, getSk, getSkMin, Telemetry } from "./schema.js";
 
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || "http://dynamodb:8000";
@@ -19,7 +21,7 @@ export const doc = DynamoDBDocumentClient.from(ddb, {
     marshallOptions: { removeUndefinedValues: true }
 });
 
-// TODO: probably should be done with an own table to track devices
+// TODO: probably should be done with an own table to track devices or at least use a index
 export async function listDevicesForTenant(tenantId: string): Promise<string[]> {
     const prefix = `TENANT#${tenantId}#DEVICE#`;
     const devices = new Set<string>();
@@ -32,11 +34,27 @@ export async function listDevicesForTenant(tenantId: string): Promise<string[]> 
         ExpressionAttributeValues: { ":prefix": { S: prefix } },
     }));
 
-    for (const item of res.Items ?? []) {
-        const pk = item.pk.S;
-        const deviceId = pk.slice(prefix.length); // remove prefix to get device ID
-        devices.add(deviceId); // duplicate deviceIDs are ignored, because Set is used
-    }
-
     return Array.from(devices).sort();
 }
+
+export async function getLatestForDevice(tenantId: string, deviceId: string): Promise<any> {
+    const pk = `TENANT#${tenantId}#DEVICE#${deviceId}`;
+
+    const res = await doc.send(new QueryCommand({
+        TableName: "telemetry",
+        IndexName: "by_seq", // ? can also use by_ts, depending on what is meant by "latest"
+        KeyConditionExpression: "#pk = :pk",
+        ExpressionAttributeNames: { "#pk": "pk" },
+        ExpressionAttributeValues: { ":pk": { S: pk } },
+        Limit: 1,
+        ScanIndexForward: false // Get the latest item
+    }));
+
+    if (res.Count === 0) return null;
+
+    const result = unmarshall(res.Items?.[0]); // Convert DynamoDB item to plain object
+    return result;
+}
+
+
+
