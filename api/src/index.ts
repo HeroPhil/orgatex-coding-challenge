@@ -1,5 +1,5 @@
 import Fastify from 'fastify'
-import { getLatestForDevice, listDevicesForTenant } from './db';
+import { getLatestForDevice, getTelemetryForDeviceBetween, listDevicesForTenant } from './db';
 
 const fastify = Fastify({
     logger: true
@@ -27,6 +27,20 @@ fastify.get<{ Params: { id: string } }>("/api/devices/:id/latest", async (req, r
     if (!item) return reply.code(404).send({ error: "not found" });
 
     return { deviceId, ...item };
+});
+
+// GET /api/devices/:id/telemetry?from&to
+fastify.get<{ Params: { id: string }, Querystring: { from?: number, to?: number } }>("/api/devices/:id/telemetry", async (req, reply) => {
+    const tenantId = "t1"; // TODO get tenantId from request
+
+    const deviceId = req.params.id;
+    const { from, to } = req.query;
+
+    const  telemetry = await getTelemetryForDeviceBetween(tenantId, deviceId, from, to);
+
+    if (telemetry.length === 0) return reply.code(404).send({ error: "not found" });
+
+    return { deviceId, telemetry };
 });
 
 fastify.listen({ host: "0.0.0.0", port: 3000 }, (err, address) => {

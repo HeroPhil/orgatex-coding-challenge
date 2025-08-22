@@ -56,5 +56,26 @@ export async function getLatestForDevice(tenantId: string, deviceId: string): Pr
     return result;
 }
 
+export async function getTelemetryForDeviceBetween(tenantId: string, deviceId: string, from?: number, to?: number): Promise<any[]> {
+    const pk = `TENANT#${tenantId}#DEVICE#${deviceId}`;
+
+    const res = await doc.send(new QueryCommand({
+        TableName: "telemetry",
+        IndexName: "by_ts",
+        KeyConditionExpression: "#pk = :pk AND #ts BETWEEN :tsFrom AND :tsTo",
+        ExpressionAttributeNames: {
+            "#pk": "pk",
+            "#ts": "ts"
+        },
+        ExpressionAttributeValues: {
+            ":pk": { S: pk },
+            ":tsFrom": { N: from?.toString() || "0" }, // Default to 0 if from is not provided
+            ":tsTo": { N: to?.toString() || "9999999999" } // Default to a 10*(9) if to is not provided
+        }
+    }));
+
+    return res.Items?.map(item => unmarshall(item)) || [];
+}
+
 
 
