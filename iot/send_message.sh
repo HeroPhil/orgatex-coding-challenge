@@ -10,8 +10,11 @@ PORT="${HOSTPORT##*:}"
 if [ "$HOST" = "$HOSTPORT" ]; then PORT="1883"; fi
 [ -z "$HOST" ] && HOST="localhost"
 
-echo "MQTT broker URL: $MQTT_URL"
-echo "Using MQTT broker at $HOST:$PORT"
+# device setup
+TENANT_ID="${TENANT_ID:-t1}"
+DEVICE_ID="${DEVICE_ID:-d1}"
+TOPIC="${TOPIC:-tenants/$TENANT_ID/devices/$DEVICE_ID/telemetry}"
+CLIENT_ID="${CLIENT_ID:-pub-$TENANT_ID-$DEVICE_ID}"
 
 seq=0
 temp=25.0
@@ -25,13 +28,13 @@ while true; do
   hum=$(echo "$hum + $RANDOM % 5 - 2" | bc)
 
   mosquitto_pub -h $HOST -p $PORT -q 1 \
-    -t tenants/t1/devices/d1/telemetry \
+    -t tenants/$TENANT_ID/devices/$DEVICE_ID/telemetry \
     -m "{\"ts\":$ts_date,\"temp\":$temp,\"hum\":$hum,\"status\":\"ok\",\"seq\":$seq}"
 
   # 20% chance to send a message with the same timestamp
   if [ $((RANDOM % 5)) -eq 0 ]; then
     mosquitto_pub -h $HOST -p $PORT -q 1 \
-      -t tenants/t1/devices/d1/telemetry \
+      -t tenants/$TENANT_ID/devices/$DEVICE_ID/telemetry \
       -m "{\"ts\":$ts_date,\"temp\":$temp,\"hum\":$hum,\"status\":\"ok\",\"seq\":$seq}"
   fi
 

@@ -1,13 +1,36 @@
 name: orgatex-smart-factory
+
+x-iot-device-base: &iot-device
+  build:
+    context: ./iot
+
 services:
-  iot-device:
-    build:
-      context: ./iot
+# emulated IoT devices
+  iot-device-t1-d1:
+    <<: *iot-device
     environment:
       - MQTT_URL=${MQTT_URL}
-    # depends_on:
-      # mosquitto:
-      #   condition: service_healthy
+      - TENANT_ID=t1
+      - DEVICE_ID=d1
+  iot-device-t1-d2:
+    <<: *iot-device
+    environment:
+      - MQTT_URL=${MQTT_URL}
+      - TENANT_ID=t1
+      - DEVICE_ID=d2
+  iot-device-t2-d1:
+    <<: *iot-device
+    environment:
+      - MQTT_URL=${MQTT_URL}
+      - TENANT_ID=t2
+      - DEVICE_ID=d1
+  iot-device-t2-d2:
+    <<: *iot-device
+    environment:
+      - MQTT_URL=${MQTT_URL}
+      - TENANT_ID=t2
+      - DEVICE_ID=d2
+# emulated IoT devices end
 
   mosquitto:
     image: eclipse-mosquitto:latest
