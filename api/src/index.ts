@@ -1,9 +1,16 @@
 import Fastify from 'fastify'
+import cors from '@fastify/cors';
 import { getLatestForDevice, getTelemetryForDeviceBetween, listDevicesForTenant } from './db';
 
 const fastify = Fastify({
-    logger: true
+    logger: true,
 })
+
+// CORS
+fastify.register(cors, {
+    origin: '*' // TODO restrict in production
+});
+
 
 fastify.get('/api/devices', async (request, reply) => {
     const tenantId = "t1"; // TODO get tenantId from request

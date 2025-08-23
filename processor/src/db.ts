@@ -26,6 +26,17 @@ export const doc = DynamoDBDocumentClient.from(ddb, {
 export async function ensureTables() {
     await Promise.all([
         ensureTable({
+            TableName: "devices",
+            KeySchema: [
+                { AttributeName: "pk", KeyType: "HASH" }, // Partition key tenantId
+                { AttributeName: "sk", KeyType: "RANGE" } // Sort key deviceId
+            ],
+            AttributeDefinitions: [
+                { AttributeName: "pk", AttributeType: "S" }, // String type
+                { AttributeName: "sk", AttributeType: "S" } // String type
+            ]
+        }),
+        ensureTable({
             TableName: "telemetry", KeySchema: [
                 { AttributeName: "pk", KeyType: "HASH" }, // Partition key used for tenant and device
                 { AttributeName: "sk", KeyType: "RANGE" } // Sort key used for timestamp and sequence number
@@ -35,6 +46,7 @@ export async function ensureTables() {
                 { AttributeName: "sk", AttributeType: "S" },  // String type for sort key
                 { AttributeName: "ts", AttributeType: "N" }, // For local secondary index
                 { AttributeName: "seq", AttributeType: "N" } // For local secondary index
+
             ],
             LocalSecondaryIndexes: [
                 {
@@ -116,6 +128,8 @@ export async function writeNewTelemetry(
     const sk = getSk(ts, seq); // Sort key for telemetry table
     const skMin = getSkMin(ts); // Sort key for metrics_min table
 
+    const ingestedAt = Date.now()
+
     // Put telemetry if not exists; Update metric atomically
     const cmd = new TransactWriteCommand({
         TransactItems: [
@@ -132,9 +146,19 @@ export async function writeNewTelemetry(
                         temp,
                         hum,
                         status,
-                        ingestedAt: Date.now() // Timestamp when the data was ingested for debugging
+                        ingestedAt: ingestedAt // Timestamp when the data was ingested for debugging
                     },
                     ConditionExpression: "attribute_not_exists(pk) AND attribute_not_exists(sk)"
+                }
+            },
+            {
+                Update: {
+                    TableName: "devices",
+                    Key: { pk: tenantId, sk: deviceId },
+                    UpdateExpression: "SET #lastSeen = :lastSeen",
+                    ExpressionAttributeNames: { "#lastSeen": "lastSeen" },
+                    ExpressionAttributeValues: { ":lastSeen": ingestedAt },
+                    ConditionExpression: "attribute_not_exists(pk) AND attribute_not_exists(sk) OR #lastSeen < :lastSeen"
                 }
             },
             {

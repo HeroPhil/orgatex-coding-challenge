@@ -21,20 +21,18 @@ export const doc = DynamoDBDocumentClient.from(ddb, {
     marshallOptions: { removeUndefinedValues: true }
 });
 
-// TODO: probably should be done with an own table to track devices or at least use a index
-export async function listDevicesForTenant(tenantId: string): Promise<string[]> {
-    const prefix = `TENANT#${tenantId}#DEVICE#`;
-    const devices = new Set<string>();
+export async function listDevicesForTenant(tenantId: string): Promise<any[]> {
 
-    const res = await doc.send(new ScanCommand({
-        TableName: "telemetry",
-        ProjectionExpression: "#pk",
-        FilterExpression: "begins_with(#pk, :prefix)",
-        ExpressionAttributeNames: { "#pk": "pk" },
-        ExpressionAttributeValues: { ":prefix": { S: prefix } },
+    const res = await doc.send(new QueryCommand({
+        TableName: "devices",
+        ProjectionExpression: "sk, lastSeen",
+        KeyConditionExpression: "pk = :pk",
+        ExpressionAttributeValues: { ":pk": { S: tenantId } },
     }));
 
-    return Array.from(devices).sort();
+    if (res.Count === 0) return [];
+
+    return res.Items?.map(item => unmarshall(item)).map(device => ({ "deviceId": device.sk, "lastSeen": device.lastSeen })) || [];
 }
 
 export async function getLatestForDevice(tenantId: string, deviceId: string): Promise<any> {
