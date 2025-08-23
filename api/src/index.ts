@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors';
-import { getLatestForDevice, getTelemetryForDeviceBetween, listDevicesForTenant } from './db';
+import { getLatestForDevice, getMetricsForTenantBetween, getTelemetryForDeviceBetween, listDevicesForTenant } from './db';
 
 const fastify = Fastify({
     logger: true,
@@ -43,11 +43,28 @@ fastify.get<{ Params: { id: string }, Querystring: { from?: number, to?: number 
     const deviceId = req.params.id;
     const { from, to } = req.query;
 
-    const  telemetry = await getTelemetryForDeviceBetween(tenantId, deviceId, from, to);
+    const telemetry = await getTelemetryForDeviceBetween(tenantId, deviceId, from, to);
 
     if (telemetry.length === 0) return reply.code(404).send({ error: "not found" });
 
     return { deviceId, telemetry };
+});
+
+// GET /api/metrics?agg=minute&from&to
+fastify.get<{ Querystring: { agg: string, from?: number, to?: number } }>("/api/metrics", async (req, reply) => {
+    const tenantId = "t1"; // TODO get tenantId from request;
+
+    const { agg, from, to } = req.query;
+
+    if (agg !== "minute") {
+        return reply.code(400).send({ error: "only agg=minute is supported" });
+    }
+
+    const metrics = await getMetricsForTenantBetween(tenantId, from, to);
+
+    if (metrics.length === 0) return reply.code(404).send({ error: "not found" });
+
+    return { metrics };
 });
 
 fastify.listen({ host: "0.0.0.0", port: 3000 }, (err, address) => {

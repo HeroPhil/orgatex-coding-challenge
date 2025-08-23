@@ -75,5 +75,27 @@ export async function getTelemetryForDeviceBetween(tenantId: string, deviceId: s
     return res.Items?.map(item => unmarshall(item)) || [];
 }
 
+export async function getMetricsForTenantBetween(tenantId: string, from?: number, to?: number): Promise<any[]> {
+    const pk = `TENANT#${tenantId}#DEVICE#MIN`;
+
+    const res = await doc.send(new QueryCommand({
+        TableName: "metrics_min",
+        IndexName: "by_tenant",
+        KeyConditionExpression: "#tenantId = :tenantId AND #ts BETWEEN :tsFrom AND :tsTo",
+        ExpressionAttributeNames: {
+            "#tenantId": "tenantId",
+            "#ts": "sk" // sk is used for timestamp in metrics_min table
+        },
+        ExpressionAttributeValues: {
+            ":tenantId": { S: tenantId },
+            ":tsFrom": { S: from?.toString() || "0" }, // Default to 0 if from is not provided
+            ":tsTo": { S: to?.toString() || "999999999999" } // Default to a max yyyyMMddHHmm if to is not provided
+        }
+    }));
+
+    return res.Items?.map(item => unmarshall(item)) || [];
+
+}
+
 
 

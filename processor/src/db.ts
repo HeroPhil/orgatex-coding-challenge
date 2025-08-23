@@ -78,7 +78,20 @@ export async function ensureTables() {
             ],
             AttributeDefinitions: [
                 { AttributeName: "pk", AttributeType: "S" },
-                { AttributeName: "sk", AttributeType: "S" }
+                { AttributeName: "sk", AttributeType: "S" },
+                { AttributeName: "tenantId", AttributeType: "S" } // For global secondary index
+            ],
+            GlobalSecondaryIndexes: [
+                {
+                    IndexName: "by_tenant",
+                    KeySchema: [
+                        { AttributeName: "tenantId", KeyType: "HASH" },
+                        { AttributeName: "sk", KeyType: "RANGE" }
+                    ],
+                    Projection: {
+                        ProjectionType: "ALL"
+                    }
+                }
             ]
         }),
         ensureTable({
