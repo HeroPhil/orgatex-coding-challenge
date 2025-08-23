@@ -1,5 +1,5 @@
-import { getDevices } from "@/lib/api";
-import { Device } from "@/lib/models";
+import { getDevices } from "@/services/api";
+import { Device } from "@/services/models";
 import { useEffect, useState } from "react";
 
 export default function DevicesPage() {
