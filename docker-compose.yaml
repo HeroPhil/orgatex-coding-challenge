@@ -86,6 +86,8 @@ services:
   api:
     build:
       context: ./api
+    environment:
+      - HMAC_SECRET=${HMAC_SECRET}
     ports:
       - "3000:3000"
     depends_on:
