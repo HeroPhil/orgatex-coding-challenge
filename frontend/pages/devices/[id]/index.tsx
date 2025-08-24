@@ -27,7 +27,6 @@ export default function DevicesPage() {
   return (
     <>
       <h2>Details page on Device {deviceId ?? "…"}</h2>
-      Test
       <ul>
         {telemetry.map((t, index) => (
           <li key={index}>

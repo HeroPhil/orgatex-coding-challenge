@@ -24,7 +24,7 @@ export default function DevicesPage() {
                                 <li key={index}>
                                     <span>
                                         {/* show just the time without time zone */}
-                                        At {new Date(metric.ts).getHours()}:{new Date(metric.ts).getMinutes().toString().padStart(2,"0")}  - Avg Temp: {(metric.temp_sum / metric.count * 10).toFixed(1)}°C, Avg Hum: {(metric.hum_sum / metric.count).toFixed(1)}%, status: OK({metric.status_ok}), WARN({metric.status_warn}), ERR({metric.status_err})
+                                        At {new Date(metric.ts).getHours()}:{new Date(metric.ts).getMinutes().toString().padStart(2,"0")}  - Avg Temp: {(metric.temp_sum / metric.count).toFixed(1)}°C, Avg Hum: {(metric.hum_sum / metric.count).toFixed(1)}%, status: OK({metric.status_ok}), WARN({metric.status_warn}), ERR({metric.status_err})
                                     </span>
                                 </li>
                             ))}
