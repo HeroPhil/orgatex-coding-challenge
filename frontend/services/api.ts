@@ -1,7 +1,38 @@
-import { Device, Metric, MetricsByDevice, Telemetry } from "./models";
+import { Device, MetricsByDevice, Telemetry } from "./models";
+
+export async function signIn(username: string, password: string) {
+    // TODO must be https in production!!
+    const response = await fetch('http://localhost:3000/api/auth', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to sign in');
+    }
+
+    const data = await response.json();
+    const token = data.token as string;
+
+    return token;
+};
+
+
+function getAuthHeaders(): Record<string, string> {
+    const token = sessionStorage.getItem('authToken');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
 
 export async function getDevices() {
-    const json = await fetch('http://localhost:3000/api/devices').then(res => res.json());
+    const response = await fetch('http://localhost:3000/api/devices', {
+        headers: {
+            ...getAuthHeaders(),
+        },
+    });
+    const json = await response.json();
     return json.devices as Device[];
 }
 
@@ -12,7 +43,12 @@ export async function getTelemetry(args: { deviceId: string, from?: number, to?:
 
     const queryString = query.toString() ? `?${query.toString()}` : "";
 
-    const json = await fetch(`http://localhost:3000/api/devices/${args.deviceId}/telemetry${queryString}`).then(res => res.json());
+    const response = await fetch(`http://localhost:3000/api/devices/${args.deviceId}/telemetry${queryString}`, {
+        headers: {
+            ...getAuthHeaders(),
+        },
+    });
+    const json = await response.json();
     return json.telemetry as Telemetry[];
 }
 
@@ -24,7 +60,12 @@ export async function getMetrics(args?: { from?: number, to?: number }) {
 
     const queryString = query.toString() ? `?${query.toString()}` : "";
 
-    const json = await fetch(`http://localhost:3000/api/metrics${queryString}`).then(res => res.json());
+    const response = await fetch(`http://localhost:3000/api/metrics${queryString}`, {
+        headers: {
+            ...getAuthHeaders(),
+        },
+    });
+    const json = await response.json();
     const data = json.metrics as MetricsByDevice;
 
     // convert sk in format YYYYMMDDHHmm to minute in milliseconds
