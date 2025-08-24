@@ -1,6 +1,6 @@
 'use client';
 
-import { getDevices } from "@/services/api";
+import { useApi } from "@/components/api-context";
 import { Device } from "@/services/models";
 import { useEffect, useState } from "react";
 
@@ -8,9 +8,11 @@ export default function DevicesPage() {
 
     const [devices, setDevices] = useState<Device[]>([]);
 
+    const { getDevices } = useApi();
+
     useEffect(() => {
         getDevices().then(setDevices);
-    }, []);
+    }, [getDevices]);
 
     return (
         <>

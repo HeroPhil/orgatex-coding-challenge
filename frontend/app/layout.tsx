@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { AuthProvider, useAuth } from '../components/auth-context';
 import { useEffect } from 'react';
+import { ApiProvider } from '@/components/api-context';
 
 export default function RootLayout({
     children,
@@ -15,7 +16,9 @@ export default function RootLayout({
                 <AuthProvider>
                     <div style={{ fontFamily: 'system-ui', padding: 16 }}>
                         <AuthGuard>
-                            {children}
+                            <ApiProvider>
+                                {children}
+                            </ApiProvider>
                         </AuthGuard>
                     </div>
                 </AuthProvider>

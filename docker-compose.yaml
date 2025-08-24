@@ -30,6 +30,12 @@ services:
       - MQTT_URL=${MQTT_URL}
       - TENANT_ID=t2
       - DEVICE_ID=d2
+  iot-device-t2-d3:
+    <<: *iot-device
+    environment:
+      - MQTT_URL=${MQTT_URL}
+      - TENANT_ID=t2
+      - DEVICE_ID=d3
 # emulated IoT devices end
 
   mosquitto:

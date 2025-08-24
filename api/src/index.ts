@@ -59,6 +59,7 @@ fastify.get<{ Params: { id: string } }>(
     { preHandler: authPreHandler },
     async (req, reply) => {
         const tenantId = req.getDecorator<PublicUserInfo>("user").tenantId;
+        console.log("Tenant ID:", tenantId);
 
         const deviceId = req.params.id;
         const item = await getLatestForDevice(tenantId, deviceId);

@@ -39,7 +39,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Persist to sessionStorage whenever values change (after initial load)
   useEffect(() => {
     if (!ready) return;
+
     try {
+      // if either value is null/empty, remove the item
+      if (!username || !token) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+
+      // otherwise, store the values
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ username, token }));
     } catch {
       // storage might be full/blocked — ignore

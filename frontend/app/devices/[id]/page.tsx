@@ -1,33 +1,27 @@
 'use client';
 
-import { getTelemetry } from "@/services/api";
+import { useApi } from "@/components/api-context";
 import { Telemetry } from "@/services/models";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function DevicesPage() {
-  const params  = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
   const [telemetry, setTelemetry] = useState<Telemetry[]>([]);
-
-  // Normalize id: string | string[] | undefined -> string | undefined
-  const deviceId = useMemo(() => {
-    const raw =  params.id;
-    return typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : undefined;
-  }, [params.id]);
+  const { getTelemetry } = useApi();
 
   useEffect(() => {
-    if (!deviceId) return; // <- don’t call until we actually have it
+    if (!params.id) return;
 
-    console.log("Device ID:", deviceId);
     const from = Math.floor((Date.now() - 15 * 60 * 1000) / 1000); // 15 minutes ago in seconds
-    getTelemetry({ deviceId, from })
+    getTelemetry({ deviceId: params.id, from })
       .then(setTelemetry)
       .catch((e) => console.error("getTelemetry failed:", e));
-  }, [deviceId]);
+  }, [getTelemetry, params.id]);
 
   return (
     <>
-      <h2>Details page on Device {deviceId ?? "…"}</h2>
+      <h2>Details page on Device {params.id ?? "…"}</h2>
       <ul>
         {telemetry.map((t, index) => (
           <li key={index}>

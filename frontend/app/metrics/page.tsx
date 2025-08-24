@@ -1,6 +1,6 @@
 'use client';
 
-import { getMetrics } from "@/services/api";
+import { useApi } from "@/components/api-context";
 import { MetricsByDevice } from "@/services/models";
 import { useEffect, useState } from "react";
 
@@ -8,11 +8,13 @@ export default function DevicesPage() {
 
     const [metrics, setMetrics] = useState<MetricsByDevice>({});
 
+    const { getMetrics } = useApi();
+
     useEffect(() => {
         const from = Math.floor((Date.now() - 15 * 60 * 1000) / 1000); // 15 minutes ago in seconds
 
         getMetrics({ from }).then(setMetrics);
-    }, []);
+    }, [getMetrics]);
 
     return (
         <>

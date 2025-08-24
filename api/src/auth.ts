@@ -31,9 +31,11 @@ export function getUserByCredentials(username: string, password: string): User {
 export async function authPreHandler(req: FastifyRequest, reply: FastifyReply, done) {
     try {
         await req.jwtVerify()
-        req.setDecorator<PublicUserInfo>("user", await req.jwtDecode() as PublicUserInfo);
+        const jwtContent =  await req.jwtDecode();
+        req.setDecorator<PublicUserInfo>("user", jwtContent as PublicUserInfo);
+        console.log("JWT Content:", jwtContent);
         done();
     } catch (err) {
-        reply.code(401).send({ error: 'Unauthorized' });
+        return reply.code(401).send({ error: 'Unauthorized' });
     }
 }

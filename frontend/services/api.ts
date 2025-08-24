@@ -1,3 +1,4 @@
+import { useAuth } from "@/components/auth-context";
 import { Device, MetricsByDevice, Telemetry } from "./models";
 
 export async function signIn(username: string, password: string) {
@@ -21,22 +22,22 @@ export async function signIn(username: string, password: string) {
 };
 
 
-function getAuthHeaders(): Record<string, string> {
-    const token = sessionStorage.getItem('authToken');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
-
-export async function getDevices() {
+export async function fetchDevices(args: {token: string}) {
     const response = await fetch('http://localhost:3000/api/devices', {
         headers: {
-            ...getAuthHeaders(),
+            'Authorization': `Bearer ${args.token}`,
         },
     });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch devices');
+    }
+
     const json = await response.json();
     return json.devices as Device[];
 }
 
-export async function getTelemetry(args: { deviceId: string, from?: number, to?: number }) {
+export async function fetchTelemetry(args: { token: string, deviceId: string, from?: number, to?: number }) {
     const query = new URLSearchParams();
     if (args.from) query.append("from", args.from.toString());
     if (args.to) query.append("to", args.to.toString());
@@ -45,14 +46,14 @@ export async function getTelemetry(args: { deviceId: string, from?: number, to?:
 
     const response = await fetch(`http://localhost:3000/api/devices/${args.deviceId}/telemetry${queryString}`, {
         headers: {
-            ...getAuthHeaders(),
+            'Authorization': `Bearer ${args.token}`,
         },
     });
     const json = await response.json();
     return json.telemetry as Telemetry[];
 }
 
-export async function getMetrics(args?: { from?: number, to?: number }) {
+export async function fetchMetrics(args: { token: string, from?: number, to?: number }) {
     const query = new URLSearchParams();
     query.append("agg", "minute");
     if (args?.from) query.append("from", args.from.toString());
@@ -62,7 +63,7 @@ export async function getMetrics(args?: { from?: number, to?: number }) {
 
     const response = await fetch(`http://localhost:3000/api/metrics${queryString}`, {
         headers: {
-            ...getAuthHeaders(),
+            'Authorization': `Bearer ${args.token}`,
         },
     });
     const json = await response.json();
