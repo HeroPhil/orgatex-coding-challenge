@@ -1,9 +1,11 @@
+'use client';
+
 import { useState } from "react";
 import { useAuth } from "../components/auth-context";
 
 export default function Home() {
 
-    const { signIn, isSignedIn } = useAuth();
+    const { signIn } = useAuth();
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");

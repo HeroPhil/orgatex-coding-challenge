@@ -1,3 +1,5 @@
+'use client';
+
 import { getMetrics } from "@/services/api";
 import { MetricsByDevice } from "@/services/models";
 import { useEffect, useState } from "react";

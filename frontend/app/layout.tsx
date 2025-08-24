@@ -1,22 +1,27 @@
 'use client';
 
-import type { AppProps } from 'next/app';
 import Link from 'next/link';
 import { AuthProvider, useAuth } from '../components/auth-context';
 import { useEffect } from 'react';
-import { sign } from 'crypto';
 
-export default function App({ Component, pageProps }: AppProps) {
-
+export default function RootLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
     return (
-        <AuthProvider>
-            <div style={{ fontFamily: 'system-ui', padding: 16 }}>
-                <AuthGuard>
-                    <Component {...pageProps} />
-                </AuthGuard>
-            </div>
-        </AuthProvider>
-    );
+        <html lang="en" >
+            <body>
+                <AuthProvider>
+                    <div style={{ fontFamily: 'system-ui', padding: 16 }}>
+                        <AuthGuard>
+                            {children}
+                        </AuthGuard>
+                    </div>
+                </AuthProvider>
+            </body>
+        </html>
+    )
 }
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -39,7 +44,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }, [ready, isSignedIn]);
 
     return <>
-        {isSignedIn && <PageHeader />}
+        {isSignedIn && <PageHeader />
+        }
         {children}
     </>;
 }
@@ -51,13 +57,14 @@ function PageHeader({ children }: { children?: React.ReactNode }) {
     return (
         <>
             <header>
-                <h1>Smart Factory</h1>
-                <nav style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
-                    <Link href="/devices">Devices</Link>
-                    <Link href="/metrics">Metrics</Link>
-                    <span style={{ flexGrow: 1 }}></span>
-                    <div>
-                        <button onClick={signOut}>Logout</button>
+                <h1>Smart Factory </h1>
+                < nav style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }
+                }>
+                    <Link href="/devices" > Devices </Link>
+                    < Link href="/metrics" > Metrics </Link>
+                    < span style={{ flexGrow: 1 }}> </span>
+                    < div >
+                        <button onClick={signOut}> Logout </button>
                     </div>
                 </nav>
                 {children}

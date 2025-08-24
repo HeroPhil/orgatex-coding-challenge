@@ -1,3 +1,5 @@
+'use client';
+
 import { getDevices } from "@/services/api";
 import { Device } from "@/services/models";
 import { useEffect, useState } from "react";

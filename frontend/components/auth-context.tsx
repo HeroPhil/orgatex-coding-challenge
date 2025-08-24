@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { signIn as apiSignIn } from '@/services/api';
 
 type AuthContextValue = {
@@ -46,7 +46,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [username, token, ready]);
 
-  const signIn = async (username: string, password: string) => {
+  const signOut = useCallback(() => {
+    setUsername(null);
+    setToken(null);
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch { }
+  }, []);
+
+  const signIn = useCallback(async (username: string, password: string) => {
     let token: string | null = null;
     try {
       token = await apiSignIn(username, password);
@@ -58,15 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
     return { username, token };
-  };
-
-  const signOut = () => {
-    setUsername(null);
-    setToken(null);
-    try {
-      sessionStorage.removeItem(STORAGE_KEY);
-    } catch { }
-  };
+  }, [signOut]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signOut,
     }),
-    [username, token, ready]
+    [username, token, ready, signIn, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

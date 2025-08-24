@@ -1,18 +1,19 @@
-// pages/devices/[id]/index.tsx
+'use client';
+
 import { getTelemetry } from "@/services/api";
 import { Telemetry } from "@/services/models";
-import { useRouter } from "next/router";
+import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 export default function DevicesPage() {
-  const router = useRouter();
+  const params  = useParams<{ id: string }>();
   const [telemetry, setTelemetry] = useState<Telemetry[]>([]);
 
   // Normalize id: string | string[] | undefined -> string | undefined
   const deviceId = useMemo(() => {
-    const raw = router.query.id;
+    const raw =  params.id;
     return typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : undefined;
-  }, [router.query.id]);
+  }, [params.id]);
 
   useEffect(() => {
     if (!deviceId) return; // <- don’t call until we actually have it
