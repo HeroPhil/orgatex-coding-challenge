@@ -75,7 +75,7 @@ export async function getTelemetryForDeviceBetween(tenantId: string, deviceId: s
     return res.Items?.map(item => unmarshall(item)) || [];
 }
 
-export async function getMetricsForTenantBetween(tenantId: string, from?: number, to?: number): Promise<any[]> {
+export async function getMetricsForTenantBetween(tenantId: string, from?: number, to?: number): Promise<{ [deviceId: string]: any[] }> {
     const pk = `TENANT#${tenantId}#DEVICE#MIN`;
 
     const res = await doc.send(new QueryCommand({
@@ -93,8 +93,19 @@ export async function getMetricsForTenantBetween(tenantId: string, from?: number
         }
     }));
 
-    return res.Items?.map(item => unmarshall(item)) || [];
+    const allMetrics = res.Items?.map(item => unmarshall(item)) || [];
 
+    // map metrics from all devices into map deviceId -> metrics[]
+    const metricsByDevice: { [deviceId: string]: any[] } = {};
+    for (const metric of allMetrics) {
+        const deviceId = metric.deviceId;
+        if (!metricsByDevice[deviceId]) {
+            metricsByDevice[deviceId] = [];
+        }
+        metricsByDevice[deviceId].push(metric);
+    }
+
+    return metricsByDevice
 }
 
 

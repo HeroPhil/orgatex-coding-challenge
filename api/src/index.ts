@@ -62,8 +62,8 @@ fastify.get<{ Querystring: { agg: string, from?: number, to?: number } }>("/api/
 
     const metrics = await getMetricsForTenantBetween(tenantId, from, to);
 
-    if (metrics.length === 0) return reply.code(404).send({ error: "not found" });
-
+    if (Object.keys(metrics).length === 0) return reply.code(404).send({ error: "not found" });
+    
     return { metrics };
 });
 

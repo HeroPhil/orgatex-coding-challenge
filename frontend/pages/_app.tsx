@@ -7,6 +7,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <header>
                 <h1>Smart Factory</h1>
                 <Link href="/devices">Devices</Link>
+                <Link href="/metrics">Metrics</Link>
             </header>
             <Component {...pageProps} />
         </div>
